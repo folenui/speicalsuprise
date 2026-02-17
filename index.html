@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kucuk supris</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #050510;
+            color: #f0f0f0;
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* --- Entry Gate (Emoji Lock) --- */
+        #gate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #050510;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease, visibility 1s;
+        }
+
+        #gate h2 {
+            font-weight: 200;
+            letter-spacing: 5px;
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+        }
+
+        #emojiInput {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+            padding: 10px;
+            width: 100px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #emojiInput:focus {
+            border-bottom-color: #ffd700;
+        }
+
+        #unlockBtn {
+            margin-top: 20px;
+            background: #ffd700;
+            color: #050510;
+            border: none;
+            padding: 12px 30px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 50px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            pointer-events: none;
+        }
+
+        #unlockBtn.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        #gate.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* --- Background Canvas --- */
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* --- Music Indicator --- */
+        .music-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        .music-indicator.visible {
+            opacity: 1;
+        }
+
+        .bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 20px;
+        }
+
+        .bar {
+            width: 3px;
+            background: #ffd700;
+            animation: bounce 1s infinite alternate;
+        }
+
+        .bar:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .bar:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0% {
+                height: 5px;
+            }
+
+            100% {
+                height: 100%;
+            }
+        }
+
+        /* --- Cassette Header --- */
+        header.cassette-player {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(15, 15, 25, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 10px 25px;
+            border-radius: 10px;
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: 1s ease 1s;
+        }
+
+        .reveal header.cassette-player {
+            opacity: 1;
+        }
+
+        .cassette-label {
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            color: rgba(255, 215, 0, 0.6);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .volume-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Vintage Slider Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .mute-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        .mute-btn.muted {
+            color: #ff4757;
+        }
+
+        .mute-btn:hover {
+            color: #ffd700;
+        }
+
+        /* --- Layout --- */
+        section {
+            min-height: 100vh;
+            padding: 10vh 10vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Hero */
+        #hero {
+            text-align: center;
+            padding-top: 15vh;
+            /* Space for cassette player */
+        }
+
+        #hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 400;
+            margin-bottom: 20px;
+            line-height: 1.1;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: 1.5s ease;
+        }
+
+        #hero p {
+            font-weight: 200;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            transition: 1.5s ease 0.5s;
+        }
+
+        .reveal h1,
+        .reveal p {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Cards Section */
+        #cards {
+            background: linear-gradient(to bottom, transparent, rgba(10, 10, 30, 0.5), transparent);
+        }
+
+        .section-tag {
+            font-size: 0.7rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: #ffd700;
+            margin-bottom: 50px;
+            opacity: 0.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 40px 30px;
+            border-radius: 5px;
+            transition: 0.5s ease;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 215, 0, 0.3);
+            transform: translateY(-10px);
+        }
+
+        .card-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-style: italic;
+            margin-bottom: 15px;
+            display: block;
+            color: rgba(255, 215, 0, 0.2);
+        }
+
+        .card p {
+            font-size: 1rem;
+            font-weight: 300;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Closing */
+        #closing {
+            text-align: center;
+        }
+
+        .letter {
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 300;
+            font-size: 1.1rem;
+            line-height: 2;
+            color: rgba(255, 255, 255, 0.7);
+            opacity: 0;
+            transition: 2s ease;
+        }
+
+        .letter.visible {
+            opacity: 1;
+        }
+
+        .letter span {
+            display: block;
+            margin-top: 30px;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.4rem;
+            color: #ffd700;
+        }
+
+        /* Scroll Hint */
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0.4;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.2;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        /* --- 3D Envelope & Full-Screen Letter --- */
+        .envelope-wrapper {
+            position: relative;
+            width: 400px;
+            /* Büyütüldü */
+            height: 250px;
+            /* Büyütüldü */
+            margin: 50px auto 30px;
+            perspective: 1500px;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease 0.8s;
+        }
+
+        .reveal .envelope-wrapper {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .envelope {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease;
+        }
+
+        .envelope:hover {
+            transform: scale(1.02) rotateY(5deg);
+        }
+
+        /* The Flap */
+        .envelope::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 200px solid transparent;
+            /* 400/2 */
+            border-right: 200px solid transparent;
+            /* 400/2 */
+            border-top: 140px solid rgba(255, 255, 255, 0.15);
+            transform-origin: top;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 4;
+        }
+
+        .envelope.active::before {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        /* Front Pockets */
+        .envelope::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 200px solid transparent;
+            border-right: 200px solid transparent;
+            border-bottom: 120px solid rgba(255, 255, 255, 0.12);
+            z-index: 3;
+        }
+
+        .envelope-front-top {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 0 0 10px 10px;
+        }
+
+        .envelope-label {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            font-size: 0.65rem;
+            letter-spacing: 4px;
+            color: #ffd700;
+            text-transform: uppercase;
+            font-weight: 600;
+            pointer-events: none;
+            transition: 0.3s;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .envelope.active .envelope-label {
+            opacity: 0;
+        }
+
+        /* Small paper (Initial hidden state) */
+        .letter-paper-expanded {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.2);
+            width: 85%;
+            max-width: 380px;
+            /* Daha da küçültüldü */
+            min-height: 280px;
+            /* Daha da küçültüldü */
+            background: #fff;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 100% 25px;
+            border-radius: 4px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .envelope.active .letter-paper-expanded {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-150px) scale(1);
+            /* Daha kompakt yükseklik */
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            pointer-events: auto;
+        }
+
+        .letter-paper-expanded p {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem !important;
+            color: #111 !important;
+            /* Biraz daha derin siyah */
+            opacity: 1 !important;
+            line-height: 1.5;
+            font-style: normal;
+            /* El yazısı havası kalmasın diye dikey yapıldı */
+            font-weight: 500;
+            text-align: center;
+            margin: 0;
+            padding: 0 15px;
+            text-transform: none;
+            letter-spacing: -0.2px;
+        }
+
+        .letter-close {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.8rem;
+            color: #ddd;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .letter-close:hover {
+            color: #333;
+            transform: rotate(90deg);
+        }
+
+        .paper-stamp {
+            margin-top: 40px;
+            font-size: 2.5rem;
+            color: #ffd700;
+        }
+
+        /* Mobile */
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            .envelope-wrapper {
+                width: 320px;
+                /* Biraz daha küçültüldü ama hala büyük */
+                height: 200px;
+            }
+
+            .envelope::before {
+                border-left-width: 160px;
+                border-right-width: 160px;
+                border-top-width: 110px;
+            }
+
+            .envelope::after {
+                border-left-width: 160px;
+                border-right-width: 160px;
+                border-bottom-width: 100px;
+            }
+
+            .letter-paper-expanded p {
+                font-size: 1.4rem;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            section {
+                padding: 10vh 5vw;
+            }
+
+            #hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .grid {
+                gap: 20px;
+            }
+
+            .card {
+                padding: 30px 20px;
+            }
+        }
+
+        /* --- Folen Card Styles --- */
+        .folen-footer {
+            padding: 100px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: visible;
+        }
+
+        .folen-group {
+            transition-duration: 500ms;
+            transform: rotate(-12deg) skewX(0deg);
+            cursor: pointer;
+        }
+
+        .folen-group:hover {
+            transform: rotate(0deg) skewX(1deg) translate(24px, 48px);
+        }
+
+        .folen-card {
+            position: relative;
+            border-radius: 1rem;
+            width: 16rem;
+            height: 9rem;
+            background-color: #27272a;
+            /* zinc-800 */
+            color: #f9fafb;
+            /* gray-50 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 0.25rem;
+            transition-duration: 400ms;
+        }
+
+        .folen-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0.75rem;
+            width: 16rem;
+            height: 8rem;
+            background-color: #404040;
+            /* neutral-700 */
+            border-radius: 1rem;
+            transform: skewX(-12deg);
+            z-index: -10;
+        }
+
+        .folen-name {
+            font-size: 3rem;
+            /* 5xl approx */
+            font-weight: 700;
+        }
+
+        .folen-tag {
+            color: #fcd34d;
+            /* amber-300 */
+            font-weight: 100;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Local Audio -->
+    <audio id="bgMusic" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Background -->
+    <canvas id="canvas"></canvas>
+
+    <!-- Header Cassette Player -->
+    <header class="cassette-player">
+        <div class="cassette-label">Analog Audio</div>
+        <div class="volume-controls">
+            <button class="mute-btn" id="muteBtn" onclick="toggleMute()">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.3"
+                oninput="changeVolume(this.value)">
+        </div>
+        <div class="cassette-label" style="font-size: 0.5rem; opacity: 0.4;">Tape-A</div>
+    </header>
+
+    <!-- Entry Gate -->
+    <div id="gate">
+        <h2>En sevdiğin emoji?</h2>
+        <input type="text" id="emojiInput" placeholder="..." maxlength="4">
+        <button id="unlockBtn" onclick="unlock()">Giriş</button>
+    </div>
+
+    <!-- Music Indicator -->
+    <div class="music-indicator" id="indicator">
+        <div class="bars">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <span style="font-size: 0.7rem; letter-spacing: 2px;">KCK BR ANI BRKMK ISTDM 🤭</span>
+    </div>
+
+    <!-- Section 1: Hero -->
+    <section id="hero">
+        <h1>Biliyorum Oradasın<br>Küçük Bir Anı</h1>
+        <p>Aşağıda senin için bir şeyler var</p>
+        <!-- Realistic 3D Envelope Container -->
+        <div class="envelope-wrapper" id="envelopeWrapper">
+            <div class="envelope" id="mainEnvelope" onclick="toggleEnvelope()">
+                <div class="envelope-label">ustne dokn cbk</div>
+
+                <!-- The Letter Paper (Moves from inside to page-view) -->
+                <div class="letter-paper-expanded" id="letterPaper">
+                    <div class="letter-close" onclick="toggleEnvelope(); event.stopPropagation();"><i
+                            class="fas fa-times"></i></div>
+                    <p>sakam yok harbiden mutlulugu hakediyosun kucuk bı anı kalsın dıye yaptım, umarım begenırsın 🤭
+                    </p>
+                    <div class="paper-stamp"><i class="far fa-smile"></i></div>
+                </div>
+
+                <div class="envelope-front-top"></div>
+            </div>
+        </div>
+
+        <div class="scroll-hint">Aşağı Kaydır</div>
+    </section>
+
+    <!-- Section 2: Cards -->
+    <section id="cards">
+        <div class="section-tag">Detaylar</div>
+        <div class="grid">
+            <div class="card">
+                <span class="card-num">01.</span>
+                <p>Gözlerin güzel demiştim, emin ol çok güzel.</p>
+            </div>
+            <div class="card">
+                <span class="card-num">02.</span>
+                <p>Gülüşün de çok özel, umarım hep gülersin.</p>
+            </div>
+            <div class="card">
+                <span class="card-num">03.</span>
+                <p>Sevmesekte iyi ki o kursa gelmişsin. :)</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Closing -->
+    <section id="closing">
+        <div class="letter">
+            Bu sadece buraya bıraktığım ufak bir iz, anı olsun istedim.<br>
+            Umarım mutlu olmuşsundur, elimden bu geldi.<br>
+            Önemli olduğunu bil, değerlisin.<br>
+            (emojiyi de senden cldm ehehehe)
+        </div>
+    </section>
+
+    <!-- Folen Footer -->
+    <div class="folen-footer">
+        <div class="folen-group">
+            <div class="folen-card">
+                <span class="folen-name">Folen</span>
+                <p class="folen-tag">Web UI/UX Dev.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Gate Logic ---
+        const gate = document.getElementById('gate');
+        const input = document.getElementById('emojiInput');
+        const btn = document.getElementById('unlockBtn');
+        const audio = document.getElementById('bgMusic');
+        const targetEmoji = "🤭";
+
+        input.addEventListener('input', () => {
+            if (input.value.trim() === targetEmoji) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        function unlock() {
+            gate.classList.add('hidden');
+            document.body.classList.add('reveal');
+            document.getElementById('indicator').classList.add('visible');
+
+            // Start Local MP3 with lower volume
+            if (audio) {
+                audio.volume = 0.3; // %30 ses seviyesi
+                audio.play().catch(e => {
+                    console.error("Audio playback error:", e);
+                });
+                console.log("Local music started at 30% volume.");
+            }
+        }
+
+        // --- Volume Logic ---
+        function changeVolume(val) {
+            if (audio) {
+                audio.volume = val;
+                const muteBtn = document.getElementById('muteBtn');
+                if (val == 0) {
+                    muteBtn.classList.add('muted');
+                    muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                } else {
+                    muteBtn.classList.remove('muted');
+                    muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                }
+            }
+        }
+
+        function toggleMute() {
+            if (audio) {
+                const slider = document.getElementById('volumeSlider');
+                const muteBtn = document.getElementById('muteBtn');
+                if (audio.volume > 0) {
+                    audio.dataset.prevVol = audio.volume;
+                    audio.volume = 0;
+                    slider.value = 0;
+                    muteBtn.classList.add('muted');
+                    muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                } else {
+                    const prev = audio.dataset.prevVol || 0.3;
+                    audio.volume = prev;
+                    slider.value = prev;
+                    muteBtn.classList.remove('muted');
+                    muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                }
+            }
+        }
+
+        function toggleEnvelope() {
+            const env = document.getElementById('mainEnvelope');
+            env.classList.toggle('active');
+        }
+
+        // --- Background Stars ---
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, stars = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            stars = [];
+            for (let i = 0; i < 150; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 1.5 + 0.5,
+                    opacity: Math.random(),
+                    speed: Math.random() * 0.3 + 0.1
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "white";
+            stars.forEach(s => {
+                ctx.globalAlpha = s.opacity;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                s.y -= s.speed;
+                if (s.y < 0) s.y = height;
+
+                s.opacity += (Math.random() - 0.5) * 0.05;
+                if (s.opacity < 0) s.opacity = 0;
+                if (s.opacity > 1) s.opacity = 1;
+            });
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        draw();
+
+        // --- Intersection Observer for Scroll Animations ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.card, .letter').forEach(el => observer.observe(el));
+
+    </script>
+</body>
+
+</html>
